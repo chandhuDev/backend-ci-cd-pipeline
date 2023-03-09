@@ -4,11 +4,11 @@ require('dotenv').config()
 require("./DB-Connect/Connect").Connect()
 const stripe = require("stripe")(process.env.STRIPE_API_SECRET);
 const User_Model=require("./Models/Schema")
-const cors = require('cors');
+const path = require('path');
 
 
 app.use(express.json());
-app.use(cors());
+app.use(express.static(path.join(__dirname, 'dist')));
 
 const calculateOrderAmount = (amount) => {
   return amount*150;
@@ -20,9 +20,12 @@ app.get("/publishKey",async (req,res)=>{
   })
 })
 
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
 app.post("/create-payment-intent", async (req, res) => {
   const { numberOfSeats } = req.body.seats;
-  console.log(numberOfSeats)
   try{
   const cost=  calculateOrderAmount(numberOfSeats)
   const paymentIntent = await stripe.paymentIntents.create({
@@ -50,4 +53,4 @@ app.post("/create-payment-intent", async (req, res) => {
 
 });
 
-app.listen(5173, () => console.log("Node server listening on port 5173!"));
+app.listen(process.env.PORT || 5173, () => console.log(`Node server listening on port ${process.env.PORT}!`));
